@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
+import json
 from datetime import datetime, timedelta
 from datamuse import datamuse
 
@@ -35,7 +36,7 @@ def related_words(request, word1, word2):
     word1_cuz_set = set(word1_cousins)
 
     # find words related to word2
-    related2 = datamuse.words(rel_jja=word2)
+    related2 =  datamuse.words(rel_jja=word2)
     word2_list = []
     for n in related2:
         related_word = n['word']
@@ -62,13 +63,16 @@ def related_words(request, word1, word2):
     immediate_words = list(words_in_common)
     cousin_words = list(common_cousins)
 
-
-    return JsonResponse({
+    disparato = {
         'wordOne': word1,
         'wordTwo': word2,
         'immediateWords': immediate_words,
         'cousinWords': cousin_words
-    })
+    }
+
+    
+    # return JsonResponse(disparato)
+    return HttpResponse(json.dumps(disparato), content_type="application/json")
 
 def test_route(request, word):
     return HttpResponse('hello from the cloud, and... ' + word)
