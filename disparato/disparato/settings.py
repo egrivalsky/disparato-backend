@@ -31,6 +31,7 @@ ALLOWED_HOSTS = ['192.168.1.184']
 # Application definition
 
 INSTALLED_APPS = [
+    'disparate_times',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -75,8 +76,8 @@ WSGI_APPLICATION = 'disparato.wsgi.application'
 
 DATABASES = {
     'default': {
-        # 'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'words',
     }
 }
 
