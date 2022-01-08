@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import json
+from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 from datamuse import datamuse
 
@@ -41,53 +42,53 @@ def related_words(request, word1, word2):
         'wordOne': word1,
         'wordTwo': word2,
         'immediateWords': list(words_in_common),
-        'wordOneSet': list(word1_set),
-        'wordTwoSet': list(word2_set),
+        'wordOneList': word1_list,
+        'wordTwoList': word2_list,
     }
 
     
     # return JsonResponse(disparato)
     return HttpResponse(json.dumps(disparato), content_type="application/json")
 
+@csrf_exempt
 def second_degree_words(request):
-    # lists = request.body
-    disparato = {
-    'wordOne': "hello",
-    'wordTwo': "hi there",
-    }
-    print('SUCCESS*****')
-    return HttpResponse(json.dumps(request.body), content_type="application/json")
+
+    lists = json.loads(request.body.decode('utf-8'))
     # print(lists)
+    word1_list = lists['wordOneList']
+    word2_list = lists['wordTwoList']
+    # print(word1_list)
+    # print(word2_list)
 
     # #find words related to each word in word1_list
-    # word1_cousins = []
-    # for n in word1_list:
-    #     rel_word1 = n
+    word1_cousins = []
+    for n in word1_list:
+        rel_word1 = n
 
-    #     cuz_word_query = datamuse.words(rel_jja=rel_word1)
+        cuz_word_query = datamuse.words(rel_jja=rel_word1)
 
-    #     for i in cuz_word_query:
-    #         cousin_word = i['word']
-    #         word1_cousins.append(cousin_word)
-    # word1_cuz_set = set(word1_cousins)
-    # print('word one cousins found')
+        for i in cuz_word_query:
+            cousin_word = i['word']
+            word1_cousins.append(cousin_word)
+    word1_cuz_set = set(word1_cousins)
+    print('word one cousins found')
 
-    # #find words related to each word in word2_list
-    # word2_cousins = []
-    # for n in word2_list:
-    #     rel_word2 = n
+    # # #find words related to each word in word2_list
+    word2_cousins = []
+    for n in word2_list:
+        rel_word2 = n
 
-    #     cuz_word_query = datamuse.words(rel_jja=rel_word2)
+        cuz_word_query = datamuse.words(rel_jja=rel_word2)
 
-    #     for i in cuz_word_query:
-    #         cousin_word = i['word']
-    #         word2_cousins.append(cousin_word)
-    # word2_cuz_set = set(word2_cousins)
-    # print('word one cousins found')
+        for i in cuz_word_query:
+            cousin_word = i['word']
+            word2_cousins.append(cousin_word)
+    word2_cuz_set = set(word2_cousins)
+    print('word one cousins found')
 
-    # second_degree_words = word1_cuz_set&word2_cuz_set
-    # print(list(second_degree_words))
-    # return HttpResponse('second degree words')
+    second_degree_words = word1_cuz_set&word2_cuz_set
+    print(list(second_degree_words))
+    return HttpResponse('second degree words')
 
 def test_route(request, word):
     return HttpResponse('hello from the cloud, and... ' + word)
