@@ -52,42 +52,115 @@ def related_words(request, word1, word2):
 
 @csrf_exempt
 def second_degree_words(request):
+    print("searching...")
 
+    final_list_word1 = []
+    final_list_word2 = []
+    final_list = []
     lists = json.loads(request.body.decode('utf-8'))
-    # print(lists)
+
+    # Payload from request.body = lists: 
+    #    {
+        # "wordOne": w1,
+        # "wordTwo": w2,
+        # "immediateWords": props.disparato,
+        # "wordOneList": props.w1List,
+        # "wordTwoList": props.w2List
+    #    } 
+
+    word_one = lists['wordOne']
+    word_two = lists['wordTwo']
+    usedWords = lists['immediateWords']
     word1_list = lists['wordOneList']
     word2_list = lists['wordTwoList']
-    # print(word1_list)
-    # print(word2_list)
 
-    # #find words related to each word in word1_list
-    word1_cousins = []
-    for n in word1_list:
-        rel_word1 = n
+    # remove any immediately related words from word_one and word_2 lists
+    slim_word1_list = list(set(word1_list)-set(usedWords))
+    slim_word2_list = list(set(word2_list)-set(usedWords))
 
-        cuz_word_query = datamuse.words(rel_jja=rel_word1)
+    # find words related to each word in word1_list
+    # add the word and it's score to third_deg_list_word1
+    third_deg_obj_word1 = {}
+    third_deg_list_word1 = []
 
-        for i in cuz_word_query:
-            cousin_word = i['word']
-            word1_cousins.append(cousin_word)
-    word1_cuz_set = set(word1_cousins)
-    print('word one cousins found')
+    for this_word in slim_word1_list:
 
-    # # #find words related to each word in word2_list
-    word2_cousins = []
-    for n in word2_list:
-        rel_word2 = n
+        third_deg_list_word1 = datamuse.words(rel_jja=this_word)
 
-        cuz_word_query = datamuse.words(rel_jja=rel_word2)
+        if this_word not in third_deg_obj_word1:
+            third_deg_obj_word1[this_word] = third_deg_list_word1
+        else:
+            third_deg_obj_word1[this_word] = third_deg_obj_word1[this_word] + third_deg_list_word1
 
-        for i in cuz_word_query:
-            cousin_word = i['word']
-            word2_cousins.append(cousin_word)
-    word2_cuz_set = set(word2_cousins)
-    print('word one cousins found')
 
-    second_degree_words = word1_cuz_set&word2_cuz_set
-    print(list(second_degree_words))
+    # find words related to each word in word2_list
+    # add the word and it's score to third_deg_list_word2
+    third_deg_obj_word2 = {}
+
+    for this_word in slim_word2_list:
+
+        third_deg_list_word2 = datamuse.words(rel_jja=this_word)
+
+        if this_word not in third_deg_obj_word2:
+            third_deg_obj_word2[this_word] = third_deg_list_word2
+        else:
+            third_deg_obj_word2[this_word] = third_deg_obj_word2[this_word].append(third_deg_list_word2)
+    
+    # iterate through all third-degree words in third_deg_obj_word2
+    # and check each to see if it's also a third-degree word in third_deg_obj_word1
+
+    for entry in third_deg_obj_word1.keys():
+        raw_data = third_deg_obj_word1[entry]
+        if len(raw_data) > 0:
+            for item in raw_data:
+                if type(item) == dict:
+                    if item['score']:
+                        if int(item['score']) >= 950:
+                            if item['word']:                        
+                                this_word = item['word']
+                                if type(this_word) == str and this_word != 'the':
+                                    final_list_word1.append(this_word)
+
+    third_deg_set_word1 = set(final_list_word1)
+
+    for entry in third_deg_obj_word2.keys():
+        raw_data = third_deg_obj_word2[entry]
+        if len(raw_data) > 0:
+            for item in raw_data:
+                if type(item) == dict:
+                    if item['score']:
+                        if int(item['score']) >= 950:
+                            if item['word']:                        
+                                this_word = item['word']
+                                if type(this_word) == str and this_word != 'the':
+                                    final_list_word2.append(this_word)
+                                    print(this_word)
+                                    if this_word in third_deg_set_word1:
+                                        final_dict = {'word': this_word,
+                                            'word_two_connection': entry }   
+                                        final_list.append(final_dict)
+
+    print("WORD ONE WORDS:")
+    print(final_list_word1)
+    print("WORD TWO WORDS:")
+    print(final_list_word2)
+    print("FINAL LIST:")
+    print(final_list)
+
+    # third_deg_list_word2.append(item['word'])
+    # third_deg_set_word2 = set(third_deg_list_word2)
+
+
+
+ 
+    
+        
+
+
+    # if it is, grab it's parent from each of the objects and send them 
+    # to our ultimate json object for the front end
+    # print(slim_word2_list)
+    # print(third_deg_obj_word2)
     return HttpResponse('second degree words')
 
 def test_route(request, word):
