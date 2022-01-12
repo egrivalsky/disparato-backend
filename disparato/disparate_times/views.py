@@ -56,6 +56,7 @@ def second_degree_words(request):
 
     final_list_word1 = []
     final_list_word2 = []
+    word1_checklist = [] #a list of third degree words to simplify checking word2 third-degree words against
     final_list = []
     lists = json.loads(request.body.decode('utf-8'))
 
@@ -110,6 +111,7 @@ def second_degree_words(request):
     # and check each to see if it's also a third-degree word in third_deg_obj_word1
 
     for entry in third_deg_obj_word1.keys():
+        final_dict1 = {}
         raw_data = third_deg_obj_word1[entry]
         if len(raw_data) > 0:
             for item in raw_data:
@@ -119,11 +121,19 @@ def second_degree_words(request):
                             if item['word']:                        
                                 this_word = item['word']
                                 if type(this_word) == str and this_word != 'the':
-                                    final_list_word1.append(this_word)
+                                    # word1_checklist.append(this_word)
+                                    if this_word not in final_dict1.keys():
+                                        final_dict1[this_word] = [entry]
+                                    # final_dict1 = {this_word: entry }
+                                    # final_list_word1.append(final_dict1)
+                                    else:
+                                        final_dict1[this_word].append(entry)
 
-    third_deg_set_word1 = set(final_list_word1)
+
+    third_deg_set_word1 = set(word1_checklist)
 
     for entry in third_deg_obj_word2.keys():
+        final_dict = {}
         raw_data = third_deg_obj_word2[entry]
         if len(raw_data) > 0:
             for item in raw_data:
@@ -134,18 +144,32 @@ def second_degree_words(request):
                                 this_word = item['word']
                                 if type(this_word) == str and this_word != 'the':
                                     final_list_word2.append(this_word)
-                                    print(this_word)
-                                    if this_word in third_deg_set_word1:
-                                        final_dict = {'word': this_word,
-                                            'word_two_connection': entry }   
-                                        final_list.append(final_dict)
+                                    if this_word in final_dict1.keys():
+                                        print('149')
+                                        if this_word not in final_dict.keys():
+                                            print('150')
+                                            final_dict[this_word] = {
+                                                 'word_one_connection': [final_dict1[this_word]], 
+                                                 'word_two_connection': [entry]
+                                                }
+                                            print('157')
+                                        else:
+                                            print('159')
+                                            final_dict[this_word]['word_one_connection'].append(final_dict1[this_word])
+                                            final_dict[this_word]['word_two_connection'].append(entry)
+ 
+                                        # final_list.append(final_dict)
 
     print("WORD ONE WORDS:")
-    print(final_list_word1)
+    print(final_dict1.keys())
     print("WORD TWO WORDS:")
     print(final_list_word2)
+    print('SET: ')
+    print(set(final_dict1.keys())&set(final_list_word2))
     print("FINAL LIST:")
-    print(final_list)
+    for key in final_dict.keys():
+        print(key + ":")
+        print(final_dict[key])
 
     # third_deg_list_word2.append(item['word'])
     # third_deg_set_word2 = set(third_deg_list_word2)
