@@ -127,24 +127,44 @@ def second_degree_words(request):
     # # and check each to see if it's also a third-degree word in WordOneDict
     wordOneTempList = []
     wordTwoTempList = []
+    finalDict = {}
     for entry in wordOneDict.keys():
         thisList = wordOneDict[entry]
         while len(thisList) > 0:
             thisWord = thisList.pop()
             wordOneTempList.append(thisWord)
+            if thisWord not in finalDict.keys():
+                finalDict[thisWord] = {'wordOneParent': [entry], 'wordTwoParent': []}
+            else:
+               finalDict[thisWord]['wordOneParent'].append(entry)
+
+                # finalDict[thisWord].update({'wordOneParent': prevValue.append(entry)})
+                # finalDict[thisWord] = finalDict[thisWord]['wordOneParent'].append(entry)
+
     for entry in wordTwoDict.keys():
         thisList = wordTwoDict[entry]
         while len(thisList) > 0:
             thisWord = thisList.pop()
             wordTwoTempList.append(thisWord)
-    
-    thirdDegWords = set(wordOneTempList) & set(wordTwoTempList)
+            if thisWord not in finalDict.keys():
+                continue
+            else:
+                finalDict[thisWord]['wordTwoParent'].append(entry)
 
-    print(len(wordOneTempList))
-    print(len(wordTwoTempList))
-    print(list(thirdDegWords))
-    print(len(thirdDegWords))
+    # group all common third-degree words in one list
 
+    thirdDegWords = list(set(wordOneTempList) & set(wordTwoTempList))
+
+    # print(len(wordOneTempList))
+    # print(len(wordTwoTempList))
+    print(thirdDegWords)
+    # print(len(thirdDegWords))
+
+    #iterate through thirdDegWords and create dictionary showing each word and its lineage
+
+    for word in thirdDegWords:
+        print(word)
+        print(finalDict[word])
 
 
 
