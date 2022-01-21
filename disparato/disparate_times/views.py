@@ -4,7 +4,6 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from datetime import datetime, timedelta
 from datamuse import datamuse
-
 datamuse=datamuse.Datamuse()
 
 def index(request):
@@ -34,9 +33,9 @@ def related_words(request, word1, word2):
     word1_set = set(word1_list)
     word2_set = set(word2_list)
     words_in_common = word1_set&word2_set
-    # common_cousins = word1_cuz_set&word2_cuz_set
+    go_deeper_list1 = word1_set - words_in_common
+    go_deeper_list2 = word2_set - words_in_common
 
-    # immediate_words = list(words_in_common)
 
     disparato = {
         'wordOne': word1,
@@ -44,6 +43,8 @@ def related_words(request, word1, word2):
         'immediateWords': list(words_in_common),
         'wordOneList': word1_list,
         'wordTwoList': word2_list,
+        'goDeeperList1': list(go_deeper_list1),
+        'goDeeperList2': list(go_deeper_list2),
     }
 
     
@@ -75,101 +76,135 @@ def second_degree_words(request):
     word1_list = lists['wordOneList']
     word2_list = lists['wordTwoList']
 
-    # remove any immediately related words from word_one and word_2 lists
-    slim_word1_list = list(set(word1_list)-set(usedWords))
-    slim_word2_list = list(set(word2_list)-set(usedWords))
+    # # remove any immediately related words from word_one and word_2 lists
+    # slim_word1_list = list(set(word1_list)-set(usedWords))
+    # slim_word2_list = list(set(word2_list)-set(usedWords))
 
     # find words related to each word in word1_list
     # add the word and it's score to third_deg_list_word1
-    third_deg_obj_word1 = {}
-    third_deg_list_word1 = []
 
-    for this_word in slim_word1_list:
+    # word1_final_object = {}
+    # third_deg_dict_word1 = {}
+    # third_deg_list_word1 = []
 
-        third_deg_list_word1 = datamuse.words(rel_jja=this_word)
-
-        if this_word not in third_deg_obj_word1:
-            third_deg_obj_word1[this_word] = third_deg_list_word1
-        else:
-            third_deg_obj_word1[this_word] = third_deg_obj_word1[this_word] + third_deg_list_word1
-
-
-    # find words related to each word in word2_list
-    # add the word and it's score to third_deg_list_word2
-    third_deg_obj_word2 = {}
-
-    for this_word in slim_word2_list:
-
-        third_deg_list_word2 = datamuse.words(rel_jja=this_word)
-
-        if this_word not in third_deg_obj_word2:
-            third_deg_obj_word2[this_word] = third_deg_list_word2
-        else:
-            third_deg_obj_word2[this_word] = third_deg_obj_word2[this_word].append(third_deg_list_word2)
+    wordOneDict = {}
+    for word in word1_list:
+        if word not in wordOneDict.keys():
+            wordOneDict[word] = []
     
-    # iterate through all third-degree words in third_deg_obj_word2
-    # and check each to see if it's also a third-degree word in third_deg_obj_word1
+    for word in wordOneDict.keys():
+        query_result = datamuse.words(rel_jja=word)
+        if len(query_result) > 0:
+            for item in query_result:
+                if int(item['score']) > 950:
+                    wordOneDict[word].append(item['word'])
 
-    for entry in third_deg_obj_word1.keys():
-        final_dict1 = {}
-        raw_data = third_deg_obj_word1[entry]
-        if len(raw_data) > 0:
-            for item in raw_data:
-                if type(item) == dict:
-                    if item['score']:
-                        if int(item['score']) >= 950:
-                            if item['word']:                        
-                                this_word = item['word']
-                                if type(this_word) == str and this_word != 'the':
-                                    # word1_checklist.append(this_word)
-                                    if this_word not in final_dict1.keys():
-                                        final_dict1[this_word] = [entry]
-                                    # final_dict1 = {this_word: entry }
-                                    # final_list_word1.append(final_dict1)
-                                    else:
-                                        final_dict1[this_word].append(entry)
+    # for word in wordOneDict.keys():
+    #     print(word)
+    #     print(wordOneDict[word])
 
 
-    third_deg_set_word1 = set(word1_checklist)
 
-    for entry in third_deg_obj_word2.keys():
-        final_dict = {}
-        raw_data = third_deg_obj_word2[entry]
-        if len(raw_data) > 0:
-            for item in raw_data:
-                if type(item) == dict:
-                    if item['score']:
-                        if int(item['score']) >= 950:
-                            if item['word']:                        
-                                this_word = item['word']
-                                if type(this_word) == str and this_word != 'the':
-                                    final_list_word2.append(this_word)
-                                    if this_word in final_dict1.keys():
-                                        print('149')
-                                        if this_word not in final_dict.keys():
-                                            print('150')
-                                            final_dict[this_word] = {
-                                                 'word_one_connection': [final_dict1[this_word]], 
-                                                 'word_two_connection': [entry]
-                                                }
-                                            print('157')
-                                        else:
-                                            print('159')
-                                            final_dict[this_word]['word_one_connection'].append(final_dict1[this_word])
-                                            final_dict[this_word]['word_two_connection'].append(entry)
+    # for this_word in word2_list:
+
+    wordTwoDict = {}
+    for word in word2_list:
+        if word not in wordTwoDict.keys():
+            wordTwoDict[word] = []
+    
+    for word in wordTwoDict.keys():
+        query_result = datamuse.words(rel_jja=word)
+        if len(query_result) > 0:
+            for item in query_result:
+                if int(item['score']) > 950 and word not in wordOneDict.keys():
+                    wordTwoDict[word].append(item['word'])
+
+    # for word in wordTwoDict.keys():
+    #     print(word)
+    #     print(wordTwoDict[word])
+    
+    # # iterate through all third-degree words (values) in wordTwoDict
+    # # and check each to see if it's also a third-degree word in WordOneDict
+    wordOneTempList = []
+    wordTwoTempList = []
+    for entry in wordOneDict.keys():
+        thisList = wordOneDict[entry]
+        while len(thisList) > 0:
+            thisWord = thisList.pop()
+            wordOneTempList.append(thisWord)
+    for entry in wordTwoDict.keys():
+        thisList = wordTwoDict[entry]
+        while len(thisList) > 0:
+            thisWord = thisList.pop()
+            wordTwoTempList.append(thisWord)
+    
+    thirdDegWords = set(wordOneTempList) & set(wordTwoTempList)
+
+    print(len(wordOneTempList))
+    print(len(wordTwoTempList))
+    print(list(thirdDegWords))
+    print(len(thirdDegWords))
+
+
+
+
+        # if len(raw_data) > 0:
+        #     for item in raw_data:
+        #         if type(item) == dict:
+        #             if item['score']:
+        #                 if int(item['score']) >= 950:
+        #                     if item['word']:                        
+        #                         this_word = item['word']
+        #                         if type(this_word) == str and this_word != 'the':
+        #                             # word1_checklist.append(this_word)
+        #                             if this_word not in final_dict1.keys():
+        #                                 final_dict1[this_word] = [entry]
+        #                             # final_dict1 = {this_word: entry }
+        #                             # final_list_word1.append(final_dict1)
+        #                             else:
+        #                                 final_dict1[this_word].append(entry)
+
+
+    # # third_deg_set_word1 = set(word1_checklist)
+
+    # for entry in third_deg_obj_word2.keys():
+    #     final_dict = {}
+    #     raw_data = third_deg_obj_word2[entry]
+    #     if len(raw_data) > 0:
+    #         for item in raw_data:
+    #             if type(item) == dict:
+    #                 if item['score']:
+    #                     if int(item['score']) >= 950:
+    #                         if item['word']:                        
+    #                             this_word = item['word']
+    #                             if type(this_word) == str and this_word != 'the':
+    #                                 final_list_word2.append(this_word)
+    #                                 if this_word in final_dict1.keys():
+    #                                     print('149')
+    #                                     if this_word not in final_dict.keys():
+    #                                         print('150')
+    #                                         final_dict[this_word] = {
+    #                                              'word_one_connection': [final_dict1[this_word]], 
+    #                                              'word_two_connection': [entry]
+    #                                             }
+    #                                         print('157')
+    #                                     else:
+    #                                         print('159')
+    #                                         final_dict[this_word]['word_one_connection'].append(final_dict1[this_word])
+    #                                         final_dict[this_word]['word_two_connection'].append(entry)
  
-                                        # final_list.append(final_dict)
+    #                                     # final_list.append(final_dict)
 
-    print("WORD ONE WORDS:")
-    print(final_dict1.keys())
-    print("WORD TWO WORDS:")
-    print(final_list_word2)
-    print('SET: ')
-    print(set(final_dict1.keys())&set(final_list_word2))
-    print("FINAL LIST:")
-    for key in final_dict.keys():
-        print(key + ":")
-        print(final_dict[key])
+    # print("WORD ONE WORDS:")
+    # print(final_dict1.keys())
+    # print("WORD TWO WORDS:")
+    # print(final_list_word2)
+    # print('SET: ')
+    # print(set(final_dict1.keys())&set(final_list_word2))
+    # print("FINAL LIST:")
+    # for key in final_dict.keys():
+    #     print(key + ":")
+    #     print(final_dict[key])
 
     # third_deg_list_word2.append(item['word'])
     # third_deg_set_word2 = set(third_deg_list_word2)
