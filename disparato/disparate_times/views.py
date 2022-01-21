@@ -127,16 +127,16 @@ def second_degree_words(request):
     # # and check each to see if it's also a third-degree word in WordOneDict
     wordOneTempList = []
     wordTwoTempList = []
-    finalDict = {}
+    semiFinalDict = {}
     for entry in wordOneDict.keys():
         thisList = wordOneDict[entry]
         while len(thisList) > 0:
             thisWord = thisList.pop()
             wordOneTempList.append(thisWord)
-            if thisWord not in finalDict.keys():
-                finalDict[thisWord] = {'wordOneParent': [entry], 'wordTwoParent': []}
+            if thisWord not in semiFinalDict.keys():
+                semiFinalDict[thisWord] = {'wordOneParent': [entry], 'wordTwoParent': []}
             else:
-               finalDict[thisWord]['wordOneParent'].append(entry)
+               semiFinalDict[thisWord]['wordOneParent'].append(entry)
 
                 # finalDict[thisWord].update({'wordOneParent': prevValue.append(entry)})
                 # finalDict[thisWord] = finalDict[thisWord]['wordOneParent'].append(entry)
@@ -146,10 +146,8 @@ def second_degree_words(request):
         while len(thisList) > 0:
             thisWord = thisList.pop()
             wordTwoTempList.append(thisWord)
-            if thisWord not in finalDict.keys():
-                continue
-            else:
-                finalDict[thisWord]['wordTwoParent'].append(entry)
+            if thisWord in semiFinalDict.keys():
+                semiFinalDict[thisWord]['wordTwoParent'].append(entry)
 
     # group all common third-degree words in one list
 
@@ -157,14 +155,15 @@ def second_degree_words(request):
 
     # print(len(wordOneTempList))
     # print(len(wordTwoTempList))
-    print(thirdDegWords)
+    # print(thirdDegWords)
     # print(len(thirdDegWords))
 
     #iterate through thirdDegWords and create dictionary showing each word and its lineage
-
-    # for word in thirdDegWords:
-    #     print(word)
-    #     print(finalDict[word])
+    finalDict = {}
+    for word in thirdDegWords:
+        finalDict[word] = semiFinalDict[word]
+        print(word)
+        print(finalDict[word])
 
 
 
