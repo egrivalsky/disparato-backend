@@ -159,12 +159,14 @@ def second_degree_words(request):
     # print(len(thirdDegWords))
 
     #iterate through thirdDegWords and create dictionary showing each word and its lineage
-    finalDict = {}
+    finalList = []
     for word in thirdDegWords:
-        finalDict[word] = semiFinalDict[word]
-        print(word)
-        print(finalDict[word])
+        d = {}
+        d[word] = semiFinalDict[word]
+        finalList.append(d)
 
+    # for i in range(len(finalList)):
+    #     print(finalList[i])
 
 
         # if len(raw_data) > 0:
@@ -239,7 +241,7 @@ def second_degree_words(request):
     # to our ultimate json object for the front end
     # print(slim_word2_list)
     # print(third_deg_obj_word2)
-    return HttpResponse(json.dumps(finalDict), content_type="application/json")
+    return HttpResponse(json.dumps(finalList), content_type="application/json")
 
 def test_route(request, word):
     return HttpResponse('hello from the cloud, and... ' + word)
