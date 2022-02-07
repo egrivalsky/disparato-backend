@@ -2,20 +2,66 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
-from datetime import datetime, timedelta
+import datetime
 from datamuse import datamuse
+from . import models
 datamuse=datamuse.Datamuse()
 
 def index(request):
     return HttpResponse('hello')
 
-def related_words(request, word1, word2):
-    
-    print('these are the words: ' + word1 + ', ' + word2)
+def update_or_create(anyWord):
+    db = models.Word
 
-    #find words related to word1
-    related1 = datamuse.words(rel_jja=word1)
+    if not db.objects.filter(word=anyWord):
+        related = datamuse.words(rel_jja=anyWord)
+        db.objects.create(
+            word = anyWord,
+            rel_word = related,
+            written = datetime.datetime.now()
+        )
+
+        print(f"{anyWord} added to db")
+        return related
+
+    else:
+        word_entry = db.objects.filter(word=anyWord)
+        related = list(word_entry.values('rel_word'))
+        # t = word_entry.values('times_accessed')
+        word_entry.update(last_accessed=datetime.datetime.now())
+        print(f"{anyWord} already in database, updated")
+        # print(f"t = {t}")
+        for e in related['rel_word']:
+            print(e)
+        return related
+
+def related_words(request, word1, word2):
+    print('these are the words: ' + word1 + ', ' + word2) 
+    related1 = update_or_create(word1)
+    # #find words related to word1
+
+    # db = models.Word
+    # # keywords = db.objects.all()
+    # # print(keywords)
+    # if not db.objects.filter(word=word1):
+    #     related1 = datamuse.words(rel_jja=word1)
+    #     db.objects.create(
+    #         word = word1,
+    #         rel_word = related1,
+    #         written = datetime.datetime.now()
+    #     )
+
+    #     print(f"{word1} added to db")
+
+
+    #     # print(db.objects.filter(word1))
+    #     # print(db.objects.filter(word1).rel_word)
+    # else:
+    #     word1_entry = db.objects.filter(word=word1)
+    #     related1 = word1_entry.objects('rel_word')
+
     word1_list = []
+
     for n in related1:
         related_word = n['word']
         word1_list.append(related_word)
@@ -23,13 +69,14 @@ def related_words(request, word1, word2):
 
 
     # find words related to word2
-    related2 =  datamuse.words(rel_jja=word2)
+    related2 =  update_or_create(word2)
     word2_list = []
     for n in related2:
         related_word = n['word']
         word2_list.append(related_word)
 
-    original_words = {word1, word2}
+
+
     word1_set = set(word1_list)
     word2_set = set(word2_list)
     words_in_common = word1_set&word2_set
@@ -93,7 +140,7 @@ def second_degree_words(request):
             wordOneDict[word] = []
     
     for word in wordOneDict.keys():
-        query_result = datamuse.words(rel_jja=word)
+        query_result = update_or_create(word)
         if len(query_result) > 0:
             for item in query_result:
                 if int(item['score']) > 950:
@@ -113,7 +160,7 @@ def second_degree_words(request):
             wordTwoDict[word] = []
     
     for word in wordTwoDict.keys():
-        query_result = datamuse.words(rel_jja=word)
+        query_result = update_or_create(word)
         if len(query_result) > 0:
             for item in query_result:
                 if int(item['score']) > 950 and word not in wordOneDict.keys():

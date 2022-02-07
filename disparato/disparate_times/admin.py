@@ -1,6 +1,6 @@
 from django.contrib import admin
-from .models import Word, RelatedWord
+from .models import Word
 # Register your models here.
 
 admin.site.register(Word)
-admin.site.register(RelatedWord)
+# admin.site.register(RelatedWord)
