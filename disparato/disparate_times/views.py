@@ -17,22 +17,33 @@ def update_or_create(anyWord):
         related = datamuse.words(rel_jja=anyWord)
         db.objects.create(
             word = anyWord,
-            rel_word = related,
-            written = datetime.datetime.now()
+            written = datetime.datetime.now(),
+            last_accessed = datetime.datetime.now(),
+            times_accessed = 1,
+            rel_word = related
         )
 
-        print(f"{anyWord} added to db")
+        # print(f"{anyWord} added to db")
+        # print("DIRECTLY FROM DATAMUSE:")
+        # print(type(related))
         return related
 
     else:
         word_entry = db.objects.filter(word=anyWord)
-        related = list(word_entry.values('rel_word'))
-        # t = word_entry.values('times_accessed')
+        this_pk = list(word_entry.values('pk'))[0]['pk']
+        # print(this_pk)
+        # print(related)
+        # this_pk = related[0]['pk']
+        record = db.objects.get(pk=this_pk)
+        related = record.rel_word
         word_entry.update(last_accessed=datetime.datetime.now())
+        word_entry.update(times_accessed = record.times_accessed + 1)
         print(f"{anyWord} already in database, updated")
-        # print(f"t = {t}")
-        for e in related['rel_word']:
-            print(e)
+        # print(f"Times Accessed: {record.times_accessed}")
+        # print(f"Last Access Time: {record.last_accessed}")
+        # print(type(related))
+
+
         return related
 
 def related_words(request, word1, word2):
@@ -106,7 +117,8 @@ def second_degree_words(request):
     final_list_word2 = []
     word1_checklist = [] #a list of third degree words to simplify checking word2 third-degree words against
     final_list = []
-    lists = json.loads(request.body.decode('utf-8'))
+    lists = json.loads(request.body)
+    # lists = json.loads(request.body.decode('utf-8'))
 
     # Payload from request.body = lists: 
     #    {
