@@ -7,69 +7,89 @@ from datamuse import datamuse
 from . import models
 datamuse=datamuse.Datamuse()
 
+error_object = {
+    'error': True,
+    'displayMessageToUser': False,
+    'message': "Something went wrong",
+    'origin': "origin unknown"
+}
+
 def index(request):
     return HttpResponse('hello')
+
+def update_or_create_2_deg(anyWord):
+    db = models.Word
+
+    if not db.objects.filter(word=anyWord):
+        related = datamuse.words(rel_trg=anyWord)
+        db.objects.create(
+        word = anyWord,
+        written = datetime.datetime.now(),
+        last_accessed = datetime.datetime.now(),
+        times_accessed = 1,
+        rel_word = related
+    )
+        return related
+
+
+    else:
+        word_entry = db.objects.filter(word=anyWord)
+        this_pk = list(word_entry.values('pk'))[0]['pk']
+        record = db.objects.get(pk=this_pk)
+        related = record.rel_word
+        word_entry.update(last_accessed=datetime.datetime.now())
+        word_entry.update(times_accessed = record.times_accessed + 1)
+
+        return related
 
 def update_or_create(anyWord):
     db = models.Word
 
     if not db.objects.filter(word=anyWord):
-        related = datamuse.words(rel_jja=anyWord)
-        db.objects.create(
+        related = datamuse.words(rel_trg=anyWord)
+        if type(related) == list and len(related) > 0:
+            db.objects.create(
             word = anyWord,
             written = datetime.datetime.now(),
             last_accessed = datetime.datetime.now(),
             times_accessed = 1,
             rel_word = related
         )
+            return related
+        else:
+            error_object['displayMessageToUser'] = True;
+            error_object['message'] = f"DataMuse did not find any words related to {anyWord}.";
+            error_object['origin'] = "update_or_create function";
+            print(error_object['message']);
 
-        # print(f"{anyWord} added to db")
-        # print("DIRECTLY FROM DATAMUSE:")
-        # print(type(related))
-        return related
+            return error_object
 
     else:
         word_entry = db.objects.filter(word=anyWord)
         this_pk = list(word_entry.values('pk'))[0]['pk']
-        # print(this_pk)
-        # print(related)
-        # this_pk = related[0]['pk']
         record = db.objects.get(pk=this_pk)
         related = record.rel_word
         word_entry.update(last_accessed=datetime.datetime.now())
         word_entry.update(times_accessed = record.times_accessed + 1)
-        print(f"{anyWord} already in database, updated")
-        # print(f"Times Accessed: {record.times_accessed}")
-        # print(f"Last Access Time: {record.last_accessed}")
-        # print(type(related))
-
 
         return related
 
 def related_words(request, word1, word2):
-    print('these are the words: ' + word1 + ', ' + word2) 
-    related1 = update_or_create(word1)
-    # #find words related to word1
-
-    # db = models.Word
-    # # keywords = db.objects.all()
-    # # print(keywords)
-    # if not db.objects.filter(word=word1):
-    #     related1 = datamuse.words(rel_jja=word1)
-    #     db.objects.create(
-    #         word = word1,
-    #         rel_word = related1,
-    #         written = datetime.datetime.now()
-    #     )
-
-    #     print(f"{word1} added to db")
-
-
-    #     # print(db.objects.filter(word1))
-    #     # print(db.objects.filter(word1).rel_word)
-    # else:
-    #     word1_entry = db.objects.filter(word=word1)
-    #     related1 = word1_entry.objects('rel_word')
+    print('these are the words: ' + word1 + ', ' + word2)
+    response = update_or_create(word1)
+    if type(response) == object and response['error']:
+        return HttpResponse(json.dumps(response), content_type="application/json")
+    elif type(response) != list:
+        error_object['displayMessageToUser'] = True;
+        error_object['message'] = "improper response from datamuse"
+        error_object['origin'] = "related_words function"
+        return HttpResponse(json.dumps(error_object), content_type="application/json")
+    elif len(response) < 1:
+        error_object['message'] = "no relations found"
+        error_object['origin'] = "related_words function"
+        return HttpResponse(json.dumps(error_object), content_type="application/json")
+    else:
+        related1 = response
 
     word1_list = []
 
@@ -80,8 +100,23 @@ def related_words(request, word1, word2):
 
 
     # find words related to word2
-    related2 =  update_or_create(word2)
+    response =  update_or_create(word2)
+    if type(response) == object and response['error']:
+        return HttpResponse(json.dumps(response), content_type="application/json")
+    elif type(response) != list:
+        error_object['displayMessageToUser'] = True;
+        error_object['message'] = "improper response from datamuse"
+        error_object['origin'] = "related_words function"
+        return HttpResponse(json.dumps(error_object), content_type="application/json")
+    elif len(response) < 1:
+        error_object['message'] = "no relations found"
+        error_object['origin'] = "related_words function"
+        return HttpResponse(json.dumps(error_object), content_type="application/json")
+    else:
+        related2 = response
+    
     word2_list = []
+
     for n in related2:
         related_word = n['word']
         word2_list.append(related_word)
@@ -152,7 +187,7 @@ def second_degree_words(request):
             wordOneDict[word] = []
     
     for word in wordOneDict.keys():
-        query_result = update_or_create(word)
+        query_result = update_or_create_2_deg(word)
         if len(query_result) > 0:
             for item in query_result:
                 if int(item['score']) > 950:
@@ -172,7 +207,7 @@ def second_degree_words(request):
             wordTwoDict[word] = []
     
     for word in wordTwoDict.keys():
-        query_result = update_or_create(word)
+        query_result = update_or_create_2_deg(word)
         if len(query_result) > 0:
             for item in query_result:
                 if int(item['score']) > 950 and word not in wordOneDict.keys():
@@ -226,7 +261,7 @@ def second_degree_words(request):
 
     # for i in range(len(finalList)):
     #     print(finalList[i])
-
+    
 
         # if len(raw_data) > 0:
         #     for item in raw_data:
