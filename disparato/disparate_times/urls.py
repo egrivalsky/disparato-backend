@@ -7,5 +7,4 @@ urlpatterns = [
     path('related_words/<str:word1>/<str:word2>/data.json', views.related_words, name="related_words"),
     path('', views.index, name='index')
 
-    
 ]

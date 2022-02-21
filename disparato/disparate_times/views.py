@@ -77,7 +77,7 @@ def update_or_create(anyWord):
 def related_words(request, word1, word2):
     print('these are the words: ' + word1 + ', ' + word2)
     response = update_or_create(word1)
-    if type(response) == object and response['error']:
+    if type(response) == dict and response['error']:
         return HttpResponse(json.dumps(response), content_type="application/json")
     elif type(response) != list:
         error_object['displayMessageToUser'] = True;
@@ -97,13 +97,12 @@ def related_words(request, word1, word2):
         related_word = n['word']
         word1_list.append(related_word)
 
-
-
     # find words related to word2
     response =  update_or_create(word2)
-    if type(response) == object and response['error']:
+    if type(response) == dict and response['error']:
         return HttpResponse(json.dumps(response), content_type="application/json")
     elif type(response) != list:
+        print(type(response))
         error_object['displayMessageToUser'] = True;
         error_object['message'] = "improper response from datamuse"
         error_object['origin'] = "related_words function"
@@ -121,14 +120,11 @@ def related_words(request, word1, word2):
         related_word = n['word']
         word2_list.append(related_word)
 
-
-
     word1_set = set(word1_list)
     word2_set = set(word2_list)
     words_in_common = word1_set&word2_set
     go_deeper_list1 = word1_set - words_in_common
     go_deeper_list2 = word2_set - words_in_common
-
 
     disparato = {
         'wordOne': word1,
@@ -153,7 +149,6 @@ def second_degree_words(request):
     word1_checklist = [] #a list of third degree words to simplify checking word2 third-degree words against
     final_list = []
     lists = json.loads(request.body)
-    # lists = json.loads(request.body.decode('utf-8'))
 
     # Payload from request.body = lists: 
     #    {
@@ -171,15 +166,6 @@ def second_degree_words(request):
     word2_list = lists['wordTwoList']
 
     # # remove any immediately related words from word_one and word_2 lists
-    # slim_word1_list = list(set(word1_list)-set(usedWords))
-    # slim_word2_list = list(set(word2_list)-set(usedWords))
-
-    # find words related to each word in word1_list
-    # add the word and it's score to third_deg_list_word1
-
-    # word1_final_object = {}
-    # third_deg_dict_word1 = {}
-    # third_deg_list_word1 = []
 
     wordOneDict = {}
     for word in word1_list:
@@ -193,13 +179,6 @@ def second_degree_words(request):
                 if int(item['score']) > 950:
                     wordOneDict[word].append(item['word'])
 
-    # for word in wordOneDict.keys():
-    #     print(word)
-    #     print(wordOneDict[word])
-
-
-
-    # for this_word in word2_list:
 
     wordTwoDict = {}
     for word in word2_list:
@@ -212,13 +191,10 @@ def second_degree_words(request):
             for item in query_result:
                 if int(item['score']) > 950 and word not in wordOneDict.keys():
                     wordTwoDict[word].append(item['word'])
-
-    # for word in wordTwoDict.keys():
-    #     print(word)
-    #     print(wordTwoDict[word])
     
     # # iterate through all third-degree words (values) in wordTwoDict
     # # and check each to see if it's also a third-degree word in WordOneDict
+
     wordOneTempList = []
     wordTwoTempList = []
     semiFinalDict = {}
@@ -232,9 +208,6 @@ def second_degree_words(request):
             else:
                semiFinalDict[thisWord]['wordOneParent'].append(entry)
 
-                # finalDict[thisWord].update({'wordOneParent': prevValue.append(entry)})
-                # finalDict[thisWord] = finalDict[thisWord]['wordOneParent'].append(entry)
-
     for entry in wordTwoDict.keys():
         thisList = wordTwoDict[entry]
         while len(thisList) > 0:
@@ -247,11 +220,6 @@ def second_degree_words(request):
 
     thirdDegWords = list(set(wordOneTempList) & set(wordTwoTempList))
 
-    # print(len(wordOneTempList))
-    # print(len(wordTwoTempList))
-    # print(thirdDegWords)
-    # print(len(thirdDegWords))
-
     #iterate through thirdDegWords and create dictionary showing each word and its lineage
     finalList = []
     for word in thirdDegWords:
@@ -259,82 +227,6 @@ def second_degree_words(request):
         d[word] = semiFinalDict[word]
         finalList.append(d)
 
-    # for i in range(len(finalList)):
-    #     print(finalList[i])
-    
-
-        # if len(raw_data) > 0:
-        #     for item in raw_data:
-        #         if type(item) == dict:
-        #             if item['score']:
-        #                 if int(item['score']) >= 950:
-        #                     if item['word']:                        
-        #                         this_word = item['word']
-        #                         if type(this_word) == str and this_word != 'the':
-        #                             # word1_checklist.append(this_word)
-        #                             if this_word not in final_dict1.keys():
-        #                                 final_dict1[this_word] = [entry]
-        #                             # final_dict1 = {this_word: entry }
-        #                             # final_list_word1.append(final_dict1)
-        #                             else:
-        #                                 final_dict1[this_word].append(entry)
-
-
-    # # third_deg_set_word1 = set(word1_checklist)
-
-    # for entry in third_deg_obj_word2.keys():
-    #     final_dict = {}
-    #     raw_data = third_deg_obj_word2[entry]
-    #     if len(raw_data) > 0:
-    #         for item in raw_data:
-    #             if type(item) == dict:
-    #                 if item['score']:
-    #                     if int(item['score']) >= 950:
-    #                         if item['word']:                        
-    #                             this_word = item['word']
-    #                             if type(this_word) == str and this_word != 'the':
-    #                                 final_list_word2.append(this_word)
-    #                                 if this_word in final_dict1.keys():
-    #                                     print('149')
-    #                                     if this_word not in final_dict.keys():
-    #                                         print('150')
-    #                                         final_dict[this_word] = {
-    #                                              'word_one_connection': [final_dict1[this_word]], 
-    #                                              'word_two_connection': [entry]
-    #                                             }
-    #                                         print('157')
-    #                                     else:
-    #                                         print('159')
-    #                                         final_dict[this_word]['word_one_connection'].append(final_dict1[this_word])
-    #                                         final_dict[this_word]['word_two_connection'].append(entry)
- 
-    #                                     # final_list.append(final_dict)
-
-    # print("WORD ONE WORDS:")
-    # print(final_dict1.keys())
-    # print("WORD TWO WORDS:")
-    # print(final_list_word2)
-    # print('SET: ')
-    # print(set(final_dict1.keys())&set(final_list_word2))
-    # print("FINAL LIST:")
-    # for key in final_dict.keys():
-    #     print(key + ":")
-    #     print(final_dict[key])
-
-    # third_deg_list_word2.append(item['word'])
-    # third_deg_set_word2 = set(third_deg_list_word2)
-
-
-
- 
-    
-        
-
-
-    # if it is, grab it's parent from each of the objects and send them 
-    # to our ultimate json object for the front end
-    # print(slim_word2_list)
-    # print(third_deg_obj_word2)
     return HttpResponse(json.dumps(finalList), content_type="application/json")
 
 def test_route(request, word):
