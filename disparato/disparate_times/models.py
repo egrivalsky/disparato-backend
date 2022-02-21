@@ -14,12 +14,3 @@ class Word(models.Model):
 
     def __str__(self):
         return f"{self.word} accessed {self.times_accessed} since {self.written}" 
-
-# class RelatedWord(models.Model):
-#     rel_word = models.CharField(max_length=100)
-#     rel_score = models.IntegerField()
-
-#     word = models.ForeignKey(Word, on_delete = models.CASCADE)
-
-#     def __str__(self):
-#         return f"{self.rel_word} has a score of {self.rel_score}"
