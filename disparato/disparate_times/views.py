@@ -80,7 +80,7 @@ def update_or_create(anyWord):
                 return error_object
         else:
             error_object['displayMessageToUser'] = True;
-            error_object['message'] = "Can't reach Datamuse. Do you have an Internet connection?";
+            error_object['message'] = "Cannot reach Datamuse. Please try again later.";
             error_object['origin'] = "update_or_create function";
             print(error_object['message']);
             return error_object
