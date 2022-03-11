@@ -15,8 +15,4 @@ semantic-version==2.8.5
 six==1.14.0
 termcolor==1.1.0
 urllib3==1.26.8
-<<<<<<< HEAD
 wcwidth==0.1.9
-=======
-wcwidth==0.1.9
->>>>>>> 6008c31c2c1c55bf7755f58b9c1b00a908b48120
