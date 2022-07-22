@@ -117,6 +117,7 @@ def related_words(request, word1, word2):
     for n in related1:
         related_word = n['word']
         word1_list.append(related_word)
+    print(word1_list)
 
     # find words related to word2
     response =  update_or_create(word2)
@@ -159,6 +160,7 @@ def related_words(request, word1, word2):
 
     
     # return JsonResponse(disparato)
+    print("Line 162")
     return HttpResponse(json.dumps(disparato), content_type="application/json")
 
 @csrf_exempt

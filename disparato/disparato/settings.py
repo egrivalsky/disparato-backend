@@ -29,7 +29,7 @@ SECRET_KEY = 'asdfakdeflWEBFLiuwebhfoq37894go9q374gfoi9agd'
 DEBUG = True
 
 # ALLOWED_HOSTS = ['192.168.1.184']
-ALLOWED_HOSTS = ['.us-east-2.elasticbeanstalk.com', '192.168.1.184']
+ALLOWED_HOSTS = ['.us-east-2.elasticbeanstalk.com', '192.168.1.184', '18.188.249.149']
 
 
 # Application definition
