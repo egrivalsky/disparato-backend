@@ -43,8 +43,9 @@ def update_or_create_2_deg(anyWord):
         return related
 
 def update_or_create(anyWord):
+    print('46')
     db = models.Word
-
+    print('48')
     if not db.objects.filter(word=anyWord):
         related = datamuse.words(rel_trg=anyWord)
         if type(related) == list and len(related) > 0:
@@ -78,18 +79,22 @@ def related_words(request, word1, word2):
     print('these are the words: ' + word1 + ', ' + word2)
     response = update_or_create(word1)
     if type(response) == dict and response['error']:
+        print('981')
         return HttpResponse(json.dumps(response), content_type="application/json")
     elif type(response) != list:
         error_object['displayMessageToUser'] = True;
         error_object['message'] = "improper response from datamuse"
         error_object['origin'] = "related_words function"
+        print('87')
         return HttpResponse(json.dumps(error_object), content_type="application/json")
     elif len(response) < 1:
         error_object['message'] = "no relations found"
         error_object['origin'] = "related_words function"
+        print('92')
         return HttpResponse(json.dumps(error_object), content_type="application/json")
     else:
         related1 = response
+        print('96')
 
     word1_list = []
 
@@ -98,7 +103,7 @@ def related_words(request, word1, word2):
         word1_list.append(related_word)
 
     # find words related to word2
-    response =  update_or_create(word2)
+    response = update_or_create(word2)
     if type(response) == dict and response['error']:
         return HttpResponse(json.dumps(response), content_type="application/json")
     elif type(response) != list:

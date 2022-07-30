@@ -1,5 +1,5 @@
 from datetime import datetime
-from tkinter import CASCADE
+# from tkinter import CASCADE
 from django.db import models
 
 

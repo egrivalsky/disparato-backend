@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 import os
+from . import secrets
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,13 +22,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['SECRET_KEY']
+SECRET_KEY = secrets.SECRET_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 # ALLOWED_HOSTS = ['192.168.1.184']
-ALLOWED_HOSTS = ['.us-east-2.elasticbeanstalk.com']
+ALLOWED_HOSTS = ['disparato-env.eba-kmpmbcq5.us-east-2.elasticbeanstalk.com', 'localhost', '192.168.1.143']
 
 
 # Application definition
@@ -75,11 +76,21 @@ WSGI_APPLICATION = 'disparato.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
-
+password = secrets.DATABASE_PASSWORD()
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql_psycopg2',
+    #     'NAME': 'disparato',
+    #     'USER': 'disparato_user',
+    #     'PASSWORD': password,
+    #     'HOST': 'disparato.cyaepuuh8uic.us-east-2.rds.amazonaws.com',
+    #     'PORT': '5432',
+    # }
+
+     'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'words',
+
     }
 }
 
@@ -118,7 +129,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = 'static'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
